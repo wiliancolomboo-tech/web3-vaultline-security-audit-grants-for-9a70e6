@@ -1,0 +1,52 @@
+flowchart TD
+    subgraph Colosseum_Ecosystem["Colosseum Project Ecosystem"]
+        Applicant["Colosseum Grant Applicant\n(Solana Project Lead)"]
+        Auditor["Designated Security Auditor\n(Vaultline Verified Partner)"]
+        CI["GitHub CI / Pre-Audit Quality Gate\n(Trdelnik / Anchor Linter / SARIF)"]
+    end
+
+    subgraph Solana_Runtime["Solana Cluster (Devnet/Mainnet-Beta)"]
+        Program["Vaultline Program\n(vaultline_grants)"]
+        PoolPDA["Grant Pool PDA\n(Authority & Global Stats)"]
+        GrantPDA["Audit Grant PDA\n(Milestone State Machine)"]
+        EscrowVault["USDC Escrow Vault PDA\n(Token Account: 4,000 USDC)"]
+    end
+
+    subgraph Enterprise_Worker["Vaultline Automation CLI & Daemon"]
+        Orchestrator["Grant Service Worker\n(Node.js / Anchor Client)"]
+        SARIFParser["SARIF & Artifact Verifier"]
+    end
+
+    subgraph Enterprise_APIs["Enterprise Notification & Delivery Hub"]
+        Slack["Slack / Discord Webhook\n(#vaultline-audits)"]
+        Resend["Resend API\n(Formal Executive Notification)"]
+    end
+
+    %% Step 1: Pool & Grant Allocation
+    Applicant -->|1. Submit Project Details & Commit Hash| Program
+    Program -->|2. Derive & Initialize| GrantPDA
+    PoolPDA -->|3. Deposit 4,000 USDC Grant| EscrowVault
+
+    %% Step 2: CI & Scope
+    CI -->|4. Generate Static Report & SARIF Hash| Orchestrator
+    Orchestrator -->|5. Commit Scope Deliverable Hash| Program
+
+    %% Step 3: Milestone 1
+    Auditor -->|6. Execute Threat Model (Tranche 1)| Program
+    Program -->|7. Disburse 1,000 USDC| Auditor
+    Program -.->|Emit MilestoneDisbursed Event| Orchestrator
+
+    %% Step 4: Milestone 2 (Interim Audit)
+    Auditor -->|8. Deliver Draft Vulnerability Report (Tranche 2)| Program
+    Program -->|9. Disburse 2,000 USDC| Auditor
+    Program -.->|Emit MilestoneDisbursed Event| Orchestrator
+
+    %% Step 5: Milestone 3 (Remediation & Final Signoff)
+    Applicant -->|10. Submit Fix Commits| Auditor
+    Auditor -->|11. Final Remediation Signoff (Tranche 3)| Program
+    Program -->|12. Disburse Final 1,000 USDC| Auditor
+    Program -.->|Emit GrantCompleted Event| Orchestrator
+
+    %% Step 6: Enterprise Notifications
+    Orchestrator -->|Dispatch Webhook Alert| Slack
+    Orchestrator -->|Send Certificate & Audit Package| Resend

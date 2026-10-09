@@ -1,0 +1,11 @@
++--------------------------------------------------------------------------------------------------+
+|                                    VALUE PROPOSITION MATRIX                                     |
++------------------------------+----------------------------------+--------------------------------+
+| Metric / Feature             | Legacy Manual Audit Subsidy      | Vaultline Grant Protocol       |
++------------------------------+----------------------------------+--------------------------------+
+| Grant Disbursement Latency   | 14-30 Business Days              | Sub-second upon signature      |
+| Capital Security             | Unilateral trust in counterparty | Non-custodial PDA vault escrow |
+| Verification Architecture    | Manual email exchange            | SHA-256 deliverable state root |
+| Sponsor Audit Trail          | Fragmented spreadsheets          | 100% On-Chain deterministic ID |
+| Integration Readiness        | None                             | Slack/Discord + Resend Webhooks|
++------------------------------+----------------------------------+--------------------------------+
