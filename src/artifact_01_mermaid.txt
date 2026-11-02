@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph Colosseum_Ecosystem["Colosseum & Project Ecosystem"]
+        Dev["Project Developer"] -->|1. Submit Repository & Grant Application| CLI["Vaultline CLI & Gateway"]
+        Admin["Colosseum / Vaultline Admin"] -->|2. Approve & Deposit 4,000 USDC| Escrow["Vaultline On-Chain Escrow PDA"]
+    end
+
+    subgraph Solana_Runtime["Solana On-Chain Engine (Anchor Program)"]
+        Escrow -->|Holds Grant Funds| VaultAccount["GrantEscrowAccount PDA"]
+        CLI -->|Initialize Grant| InitIX["instruction: initialize_grant"]
+        InitIX --> VaultAccount
+        CLI -->|Submit Findings Hash| MilestoneIX["instruction: record_milestone"]
+        MilestoneIX --> VaultAccount
+        CLI -->|Final Attestation| ReleaseIX["instruction: release_milestone_funds"]
+        ReleaseIX -->|CPI Transfer USDC| AuditorWallet["Vaultline Auditor Wallet"]
+        ReleaseIX -->|Residual Transfer| DevWallet["Project Developer Wallet"]
+    end
+
+    subgraph Offchain_Worker["Vaultline Enterprise Sentinel Agent"]
+        Listener["Solana WebSocket Event Listener"] -.->|Stream Program Logs| Worker["Sentinel Orchestration Worker"]
+        Worker -->|Run AST Lint & Hash Check| GitHubAPI["GitHub / Source Repository"]
+        Worker -->|Format Audit Notification| Resend["Resend Enterprise Email API"]
+        Worker -->|Real-Time Status Alerts| Webhooks["Slack / Discord Security Operations Webhook"]
+    end
+
+    VaultAccount -.->|Emits GrantStateChangedEvent| Listener
+    Resend -->|Delivery to Stakeholders| Stakeholders["Colosseum Grant Committee & Founders"]
+    Webhooks -->|Live SecOps Pipeline| SecOps["Vaultline Lead Security Engineers"]

@@ -1,0 +1,5 @@
+How it works under the hood:
+1/ Dedicated PDA vaults lock 4,000 USDC per project.
+2/ Vaultline auditors notarize a SHA-256 audit digest & severity vector on-chain via ed25519 attestations.
+3/ Payout tranches (50/50) auto-disburse only when critical issues are resolved.
+4/ Live alerts via @resend & Slack.

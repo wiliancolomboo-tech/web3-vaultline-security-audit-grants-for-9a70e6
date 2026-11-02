@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  vaultline-grant-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline_grant_daemon
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - PROGRAM_ID=V1tLineAuditGrant1111111111111111111111111111
+      - AUDITOR_KEYPAIR_PATH=/run/secrets/auditor_keypair.json
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    secrets:
+      - auditor_keypair.json
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+secrets:
+  auditor_keypair.json:
+    file: ./secrets/auditor_keypair.json

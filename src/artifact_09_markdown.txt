@@ -1,0 +1,19 @@
+1/4 🛡️ Announcing the Vaultline Security Audit Grants Protocol for @Colosseum!
+
+Early-stage Solana builders need high-assurance security audits before launch, but managing grants and milestone deliverables manually creates friction. 
+
+We built the automated grant escrow & verification pipeline on @solana. 🧵👇
+
+2/4 ⚡ How It Works:
+• Up to 4,000 USDC escrowed in secure Anchor PDAs per selected Colosseum project
+• Deterministic 3-stage milestone release: (25% Scope Lock ➔ 50% Triage ➔ 25% Remediation Attestation)
+• Real-time AST static checks & automated Slack/Resend notification rails
+
+3/4 🔒 Zero Trust, Complete Capital Safety:
+Auditors and project leads transact through cryptographically attested milestone proofs. Funds are programmatically unlocked strictly as deliverables pass inspection—eliminating scope drift and ensuring every USDC drives mainnet security.
+
+4/4 🚀 Turnkey, tested with 100% test coverage, and Docker-ready for the Vaultline team. 
+
+Colosseum projects: build fearlessly. We've got your smart contracts secured.
+
+Check out the architecture & repo: github.com/vaultline/colosseum-audit-grants 🛡️🔥

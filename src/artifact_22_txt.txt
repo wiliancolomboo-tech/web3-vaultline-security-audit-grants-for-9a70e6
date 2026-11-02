@@ -1,0 +1,12 @@
++--------------------------+------------------------------+---------------------------------------+
+| INCIDENT / STATE         | DETECTION CRITERIA           | RECOVERY / RUNBOOK ACTION             |
++--------------------------+------------------------------+---------------------------------------+
+| Grantee Dropout          | Milestone inactivity > 30d   | Sponsor executes clawback_expired_grant|
+|                          |                              | -> 100% of unreleased USDC recovered  |
++--------------------------+------------------------------+---------------------------------------+
+| Auditor Key Compromise   | Anomalous attestation alert  | Multisig DAO revokes auditor via      |
+|                          |                              | governance migration instructions     |
++--------------------------+------------------------------+---------------------------------------+
+| RPC Rate Limit Spike     | Worker healthcheck timeout   | Fallback to secondary Helius / Triton |
+|                          |                              | endpoint via env swap                 |
++--------------------------+------------------------------+---------------------------------------+

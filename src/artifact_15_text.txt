@@ -1,0 +1,6 @@
+3/ Built with @AnchorLang, integrated with real-time Slack/Discord webhooks & @resend transaction receipts for complete transparency.
+
+Hackathon founders: Secure your protocol before mainnet.
+Auditors: Get paid instantly without invoicing delays.
+
+Check the live open-source repo: github.com/vaultline-security/vaultline-colosseum-grants 🚀

@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  vaultline-oracle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-security-oracle
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=V1tLineGr4ntEscrow1111111111111111111111111
+      - GRANTOR_KEYPAIR_PATH=/app/credentials/deployer-keypair.json
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SECURITY_WEBHOOK_URL=${SECURITY_WEBHOOK_URL}
+    volumes:
+      - ./credentials:/app/credentials:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

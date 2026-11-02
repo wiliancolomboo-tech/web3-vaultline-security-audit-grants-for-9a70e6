@@ -1,0 +1,14 @@
+1/3 🛡️ Smart contracts built at @Colosseum should never launch without institutional-grade security.
+
+Introducing Vaultline GrantShield: an autonomous, milestone-escrowed audit protocol disbursing up to 4,000 USDC per hackathon project directly on @solana. 🧵👇
+
+2/3 ⚡ How it works:
+1️⃣ CLI scans Anchor AST for missing signer checks & overflow vectors
+2️⃣ Project repo digest is anchored on-chain
+3️⃣ 4,000 USDC is locked into a non-custodial PDA & disbursed 50/50 across verified audit milestones
+4️⃣ Instant alerts via @resend & webhooks!
+
+3/3 🏆 Security shouldn't be a bottleneck for Solana founders. With Vaultline audit grants, Colosseum builders get both audit capital and real-time automated triage before mainnet launch.
+
+Check out the open-source protocol and run the triage engine today! 🚀
+#Solana #Colosseum #Web3Security #Rust

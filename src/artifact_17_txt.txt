@@ -1,0 +1,6 @@
+Every dollar of security grant funding should directly protect user funds on Solana. 
+
+Ready to inspect, test, and deploy with turnkey Dockerization:
+GitHub: github.com/vaultline-sec/colosseum-audit-grants
+
+Accelerating security for the next cohort of @Colosseum winners. 🛡️🚀

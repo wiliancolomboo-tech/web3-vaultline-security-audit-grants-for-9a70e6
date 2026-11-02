@@ -1,0 +1,18 @@
+1/3 🛡️ Excited to unveil our submission for the @VaultlineSec Security Audit Grants for @ColosseumProjects!
+
+We built the Vaultline Audit Grant Protocol: an autonomous, milestone-escrow smart contract on @solana that streamlines the entire 4,000 USDC audit grant lifecycle. 🧵👇
+
+2/3 ⚡ How it works:
+1️⃣ Non-custodial escrow in Solana PDAs
+2️⃣ Multi-tranche releases (25% Scope / 50% Triage / 25% Remediation)
+3️⃣ Cryptographic SHA-256 on-chain report attestations
+4️⃣ Automated real-time alerts to Discord, Slack & @resend
+
+Zero manual overhead for organizers. Guaranteed milestone compliance for auditors.
+
+3/3 📦 Turnkey, audited Anchor code, 100% test coverage, and 1-click Docker orchestration ready for deployment.
+
+Colosseum builders deserve institutional-grade security infrastructure. Let's make Solana safer, block by block! 🚀
+
+GitHub: https://github.com/vaultline-grants/vaultline-core
+#Solana #Colosseum #Web3Security #Anchor

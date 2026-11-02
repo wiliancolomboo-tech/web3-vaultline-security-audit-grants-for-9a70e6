@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  vaultline-sentinel:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SOLANA_RPC_ENDPOINT=https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}
+      - VAULTLINE_PROGRAM_ID=V1tLineAudit1111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - NOTIFICATION_EMAIL=security@vaultline.xyz
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - PORT=8080
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"

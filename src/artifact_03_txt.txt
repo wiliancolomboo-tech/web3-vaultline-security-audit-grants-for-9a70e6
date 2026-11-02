@@ -1,0 +1,28 @@
++-----------------------------------------------------------------------------------+
+|                            VAULTLINE SENTINEL TOPOLOGY                            |
++-----------------------------------------------------------------------------------+
+                                          |
+        +---------------------------------+---------------------------------+
+        |                                                                   |
++-------v-------------------------+                       +-----------------v-------+
+|  SOLANA VALIDATOR CLUSTER       |                       | ENTERPRISE CLOUD SUITE  |
+|  - vaultline_core (Anchor Prog) |                       | - Docker Alpine Host    |
+|  - Grant Vault PDA              |                       | - Sentinel Worker Daemon|
+|  - SPL Token Associated Vault   |                       | - Redis State Cache     |
++-------^-------------------------+                       +-----------------^-------+
+        |                                                                   |
+        | JSON-RPC WebSocket Subscription                                  | Webhook Payloads
+        | (Transaction Signature / AccountChange)                          | (TLS 1.3 / HMAC)
+        |                                                                   |
++-------v-------------------------------------------------------------------v-------+
+|                         VAULTLINE SENTINEL AGENT DAEMON                           |
+|  - Web3.js Connection Layer (Commitment: Confirmed)                              |
+|  - Cryptographic Commit-Hash & Bytecode Matching Engine                          |
+|  - Idempotent Transaction Ingestion & State Reconciliation Pipeline               |
++-------+---------------------------------+---------------------------------+-------+
+        |                                 |                                 |
++-------v-----------------+     +---------v---------------+     +-----------v-------+
+| RESEND EMAIL SERVICE    |     | DISCORD / SLACK WEBHOOK |     | COLOSSEUM AUDIT   |
+| - High-Priority Alerts  |     | - Ops Room Broadcasting |     | REGISTRY REPO     |
+| - Audit Clearance Certs |     | - Rich Embed Cards      |     | - Git Signed Tags |
++-------------------------+     +-------------------------+     +-------------------+

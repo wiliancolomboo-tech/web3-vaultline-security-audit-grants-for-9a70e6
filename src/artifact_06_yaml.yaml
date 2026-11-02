@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  vaultline-sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-sentinel-daemon
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - VAULTLINE_PROGRAM_ID=V1tLinEZ7sQ72cRBN5fMvY5oQoK4wMUPe3sFmKzJj9e
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"

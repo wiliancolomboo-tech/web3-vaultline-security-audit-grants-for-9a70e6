@@ -1,0 +1,6 @@
+Built on @solana with zero-compromise security:
+🔹 PDA-locked USDC escrow release tied directly to deterministic git scope hashes
+🔹 3-milestone payout pipeline: AST analysis (25%) ➡️ Draft triage (35%) ➡️ Remediation verification (40%)
+🔹 Real-time notifications powered by @resend & custom webhooks
+
+No opaque grant disbursements. Pure cryptographic trust. 🔒

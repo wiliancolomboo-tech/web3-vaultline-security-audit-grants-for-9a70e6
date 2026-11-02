@@ -1,0 +1,10 @@
+GET /health
+Response:
+{
+  "status": "healthy",
+  "program_id": "V1tLnEgRAnT11111111111111111111111111111111",
+  "connected_cluster": "mainnet-beta",
+  "active_grants_monitored": 14,
+  "resend_dispatcher": "operational",
+  "uptime_seconds": 184920
+}

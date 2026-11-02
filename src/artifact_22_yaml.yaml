@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  vaultline-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-security-daemon
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
+      - PROGRAM_ID=V1tLN8Z3jQdKzVw7dM5Lq2YkP8g1mE4sN6uRxT9aBC1
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SECOPS_WEBHOOK_URL=${SECOPS_WEBHOOK_URL}
+      - ALERT_EMAIL_RECIPIENT=${ALERT_EMAIL_RECIPIENT}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keys:/app/keys:ro

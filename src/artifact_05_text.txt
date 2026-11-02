@@ -1,0 +1,6 @@
+client/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── sentinel-daemon.ts
+│   └── enterprise-notifier.ts

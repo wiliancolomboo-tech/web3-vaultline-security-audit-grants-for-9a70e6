@@ -1,0 +1,159 @@
+import express from "express";
+import { Connection, PublicKey } from "@solana/web3.js";
+import client from "prom-client";
+
+const RPC_URL = process.env.RPC_URL ?? "https://api.devnet.solana.com";
+const PROGRAM_ID = new PublicKey(
+  process.env.PROGRAM_ID ?? "GrntGd1111111111111111111111111111111111111"
+);
+const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK_URL;
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const ALERT_EMAIL = process.env.ALERT_EMAIL;
+const PORT = Number(process.env.PORT ?? 8080);
+
+const connection = new Connection(RPC_URL, "confirmed");
+const processed = new Set<string>();
+
+const registry = new client.Registry();
+client.collectDefaultMetrics({ register: registry });
+const eventsSeen = new client.Counter({
+  name: "grantguard_events_seen_total",
+  help: "Number of decoded grant events observed"
+});
+registry.registerMetric(eventsSeen);
+
+async function postJson(url: string, body: unknown): Promise<void> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Webhook failed: ${response.status}`);
+  }
+}
+
+async function notify(message: string): Promise<void> {
+  const tasks: Promise<void>[] = [];
+
+  if (SLACK_WEBHOOK) {
+    tasks.push(postJson(SLACK_WEBHOOK, { text: message }));
+  }
+
+  if (DISCORD_WEBHOOK) {
+    tasks.push(postJson(DISCORD_WEBHOOK, { content: message }));
+  }
+
+  if (RESEND_API_KEY && ALERT_EMAIL) {
+    tasks.push(
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${RESEND_API_KEY}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          from: "GrantGuard <alerts@example.com>",
+          to: [ALERT_EMAIL],
+          subject: "GrantGuard on-chain event",
+          text: message
+        })
+      }).then(async response => {
+        if (!response.ok) {
+          throw new Error(`Resend failed: ${response.status}`);
+        }
+      })
+    );
+  }
+
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter(result => result.status === "rejected");
+  if (failed.length > 0) {
+    console.error("One or more notifications failed", failed);
+  }
+}
+
+function decodeLog(log: string): string | null {
+  if (
+    log.includes("GrantInitialized") ||
+    log.includes("GrantFunded") ||
+    log.includes("MilestoneSubmitted") ||
+    log.includes("MilestoneApproved") ||
+    log.includes("MilestoneReleased") ||
+    log.includes("GrantRefunded") ||
+    log.includes("GrantCancelled")
+  ) {
+    return log;
+  }
+
+  return null;
+}
+
+async function processSignature(signature: string): Promise<void> {
+  if (processed.has(signature)) return;
+
+  const tx = await connection.getParsedTransaction(signature, {
+    commitment: "confirmed",
+    maxSupportedTransactionVersion: 0
+  });
+
+  if (!tx) return;
+
+  const logs = tx.meta?.logMessages ?? [];
+  const events = logs.map(decodeLog).filter(Boolean) as string[];
+
+  if (events.length === 0) {
+    processed.add(signature);
+    return;
+  }
+
+  eventsSeen.inc(events.length);
+
+  for (const event of events) {
+    await notify(`GrantGuard event\nSignature: ${signature}\n${event}`);
+  }
+
+  processed.add(signature);
+}
+
+async function poll(): Promise<void> {
+  const signatures = await connection.getSignaturesForAddress(PROGRAM_ID, {
+    limit: 25
+  });
+
+  for (const item of signatures.reverse()) {
+    await processSignature(item.signature);
+  }
+}
+
+const app = express();
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "grantguard-worker" });
+});
+
+app.get("/ready", async (_req, res) => {
+  try {
+    await connection.getLatestBlockhash();
+    res.json({ status: "ready", rpc: RPC_URL });
+  } catch {
+    res.status(503).json({ status: "not_ready" });
+  }
+});
+
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", registry.contentType);
+  res.end(await registry.metrics());
+});
+
+app.listen(PORT, () => {
+  console.log(`GrantGuard worker listening on :${PORT}`);
+});
+
+setInterval(() => {
+  poll().catch(error => console.error("poll failed", error));
+}, 10_000);
+
+poll().catch(error => console.error("initial poll failed", error));

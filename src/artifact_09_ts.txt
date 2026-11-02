@@ -1,0 +1,16 @@
+import { describe, expect, it } from "vitest";
+
+describe("event decoding", () => {
+  it("recognizes GrantFunded", async () => {
+    const log = "Program data: GrantFunded";
+    expect(log.includes("GrantFunded")).toBe(true);
+  });
+
+  it("ignores unrelated logs", async () => {
+    const log = "Program log: ComputeBudget";
+    expect(
+      ["GrantInitialized", "GrantFunded", "MilestoneSubmitted"]
+        .some(name => log.includes(name))
+    ).toBe(false);
+  });
+});

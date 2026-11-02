@@ -1,0 +1,26 @@
+🧵 1/3
+Security shouldn’t be an afterthought for @Colosseum hackathon winners.
+
+Today, we're proud to open-source the Vaultline Security Audit Grants Protocol: A trustless, milestone-based escrow platform guaranteeing up to 4,000 USDC per team with cryptographic remediation notarization on @solana. 🛡️⚡
+
+#Solana #Colosseum
+
+---
+
+🧵 2/3
+How it works:
+1️⃣ 4,000 USDC is locked in deterministic PDA vaults upon project admission
+2️⃣ Milestones disburse automatically (25% Scoping ➡️ 50% Remediation ➡️ 25% Final Sign-Off)
+3️⃣ Git commit hashes & SHA-256 vulnerability reports are notarized on-chain
+4️⃣ Live updates via @resend & Slack webhooks
+
+Zero idle capital. 100% transparency.
+
+---
+
+🧵 3/3
+Complete with Anchor smart contracts, test coverage, CLI tooling, and 1-click Docker orchestration. 
+
+Empowering the next generation of Solana founders to launch battle-tested code without prohibitive audit roadblocks.
+
+Check out the full repository & runbook: https://github.com/vaultline/audit-grants-protocol 🚀

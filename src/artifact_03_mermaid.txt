@@ -1,0 +1,37 @@
+flowchart TD
+    subgraph ClientLayer ["Client & CI/CD Layer"]
+        CLI["Vaultline CLI Tool"]
+        GHA["GitHub Actions Colosseum CI"]
+    end
+
+    subgraph SolanaCluster ["Solana Blockchain (Devnet / Mainnet-Beta)"]
+        Program["Vaultline GrantShield Program<br/>(Program ID: VLine...111)"]
+        GrantAccount["Grant PDA: [b'grant', project_id]"]
+        EscrowAccount["Escrow Token Account PDA: [b'escrow', grant_pda]"]
+        SplToken["SPL Token / Token-2022 (USDC Mint)"]
+    end
+
+    subgraph OffChainWorker ["GrantShield Sentinel Agent Service"]
+        WS["Solana WebSocket RPC Listener"]
+        Engine["Event Processing & State Validator"]
+        Cache["Local Key-Value State Sync"]
+    end
+
+    subgraph EnterpriseAPIs ["Enterprise Communication & Telemetry"]
+        ResendAPI["Resend Enterprise Email Service"]
+        SlackAPI["Slack Operations Webhook"]
+        Prometheus["Prometheus / Metrics / Health Endpoint"]
+    end
+
+    CLI -->|RPC Instructions| Program
+    GHA -->|Scope Signatures| Program
+    Program -->|State Transitions| GrantAccount
+    Program -->|CPI Transfer| EscrowAccount
+    EscrowAccount -->|USDC| SplToken
+
+    WS -->|Subscribe Events / Logs| Program
+    WS --> Engine
+    Engine --> Cache
+    Engine -->|POST /emails| ResendAPI
+    Engine -->|POST /webhook| SlackAPI
+    Engine -->|Expose :9090/healthz| Prometheus

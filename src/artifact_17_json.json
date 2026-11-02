@@ -1,0 +1,25 @@
+{
+  "name": "vaultline-audit-oracle-cli",
+  "version": "1.0.0",
+  "description": "Production Node.js CLI & Orchestration Engine for Vaultline Security Grants",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "audit:scan": "node dist/index.js scan",
+    "oracle:worker": "node dist/index.js listen"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.2",
+    "axios": "^1.7.2",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "resend": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "typescript": "^5.5.2"
+  }
+}

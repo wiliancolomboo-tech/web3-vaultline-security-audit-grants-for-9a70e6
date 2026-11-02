@@ -1,0 +1,5 @@
+Colosseum builders: Apply for up to $4,000 USDC to secure your protocol before token & mainnet deployment.
+
+Review our production Anchor contract and open-source verification CLI on GitHub: https://github.com/vaultline-security/colosseum-grants
+
+Let’s make Solana the safest ecosystem in Web3. 🚀 @VaultlineHQ @Colosseum

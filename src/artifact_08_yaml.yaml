@@ -1,24 +1,20 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  vaultline-worker:
+  vaultline-sentinel:
     build: .
     restart: always
+    environment:
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
+      - PROGRAM_ID=V1tLineSecAud1tGrants111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - AUDIT_ALERT_EMAIL=security@colosseum.org
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     ports:
       - "8080:8080"
-    environment:
-      - PORT=8080
-      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-      - ADMIN_KEYPAIR=/secrets/admin.json
-      - AUDITOR_KEYPAIR=/secrets/auditor.json
-      - USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-      - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00/B00/XXXX
-      - RESEND_API_KEY=re_123456789abcdef
-      - ALERT_EMAIL=security@vaultline.xyz
-    volumes:
-      - ./keys:/secrets:ro
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

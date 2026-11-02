@@ -1,0 +1,12 @@
+GET /health HTTP/1.1
+Host: localhost:8080
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": "healthy",
+  "active_grants_monitored": 12,
+  "last_slot_synced": 298419201,
+  "circuit_breaker": "ACTIVE_NORMAL"
+}

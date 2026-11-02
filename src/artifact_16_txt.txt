@@ -1,0 +1,5 @@
+Built natively on Solana with @AnchorLang:
+⚡ Zero-custody PDA escrow locking 4,000 USDC per project
+🔍 Automated AST static analyzer finding critical flaws before human audit begins
+🔐 SHA-256 deliverable proofs required for 50/50 milestone release
+📨 Instant webhook receipts via @resend

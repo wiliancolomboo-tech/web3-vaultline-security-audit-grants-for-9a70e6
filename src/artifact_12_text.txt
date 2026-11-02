@@ -1,0 +1,8 @@
+Traditional grants pay upfront or drown in manual PDF verification.
+
+Sentinel locks USDC in PDA-based escrows, unlocking capital as milestones complete:
+🔹 25% Scope Freeze
+🔹 50% Vulnerability Discovery
+🔹 25% Final Mitigation
+
+Reports & Git commit SHAs are anchored permanently on-chain. Zero guesswork.

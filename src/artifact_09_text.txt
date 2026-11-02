@@ -1,0 +1,7 @@
+Thrilled to unveil our winning infrastructure submission for the @Colosseum & Vaultline Security Audit Grants:
+
+The Vaultline Guardian Protocol 🛡️⚡
+
+A fully autonomous, on-chain milestone escrow releasing up to 4,000 USDC per Colosseum graduate with zero counterparty friction.
+
+Here is how it works 🧵👇

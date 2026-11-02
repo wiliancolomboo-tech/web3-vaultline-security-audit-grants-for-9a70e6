@@ -1,0 +1,9 @@
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "network": "solana-mainnet",
+  "rpcLatencyMs": 42,
+  "activeGrants": 14,
+  "treasuryEscrowLockedUSDC": "56000.00",
+  "totalAttestationsMinted": 9
+}

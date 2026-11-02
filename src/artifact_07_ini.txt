@@ -1,0 +1,6 @@
+SOLANA_RPC_URL="https://api.devnet.solana.com"
+PROGRAM_ID="VLinE11111111111111111111111111111111111111"
+SLACK_WEBHOOK_URL="https://api.example.com/webhooks/alerts/placeholder"
+RESEND_API_KEY="re_123456789abcdefghijklmnopqrstuvwxyz"
+NOTIFICATION_EMAIL="security-committee@vaultline.security"
+PORT=8080

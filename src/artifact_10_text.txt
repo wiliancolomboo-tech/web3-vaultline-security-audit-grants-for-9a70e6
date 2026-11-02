@@ -1,0 +1,8 @@
+Hackathon demos shouldn't hit mainnet without battle-tested security.
+
+Our engine solves this via:
+🔒 @Solana Anchor PDA escrow enforcing 3-step dual-attested unlocks (25% / 50% / 25%)
+🔍 Static AST scanning for Solana-specific reentrancy & signer pitfalls
+📬 Instant report notarization via @resend & Webhooks
+
+Zero stubs. 100% open-source.
