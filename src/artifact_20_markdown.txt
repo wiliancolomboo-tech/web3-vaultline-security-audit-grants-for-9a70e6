@@ -1,0 +1,16 @@
+1/4 🛡️ Announcing Vaultline GrantShield: The automated security audit grant protocol for @Colosseum high-velocity Solana teams. 
+
+Colosseum builders get up to 4,000 USDC in audit grants—now with zero friction, zero escrow risk, and full on-chain provenance. 🧵👇
+
+2/4 ⚡ How it works:
+Instead of clunky manual invoices, GrantShield locks 4,000 USDC into an Anchor PDA vault, disbursing payouts across 3 verified milestones:
+🔹 30%: Scope freeze & threat modeling
+🔹 50%: Vulnerability remediation & patch commit verification
+🔹 20%: Final audit seal publication
+
+3/4 📜 The best part? Verified on-chain Audit Seals.
+Once certified, GrantShield anchors an immutable `AuditSeal` PDA proving your Solana program ID has zero unresolved criticals for that exact Git commit. Composable with any DeFi protocol via CPI!
+
+4/4 🛠️ Open-source, turnkey Docker ready, powered by Solana + Anchor with Discord & Resend webhooks for real-time grant disbursement telemetry.
+
+Building on @Colosseum? Let’s make Solana hackathon projects unbreakable with @Vaultline. 🚀

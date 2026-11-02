@@ -1,0 +1,7 @@
+SOLANA_RPC_URL=https://api.devnet.solana.com
+AEGIS_PROGRAM_ID=AegisV1111111111111111111111111111111111111
+USDC_MINT_ADDRESS=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+AUDITOR_PRIVATE_KEY_JSON=[1,2,3...255]
+RESEND_API_KEY=re_1234567890abcdef
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder

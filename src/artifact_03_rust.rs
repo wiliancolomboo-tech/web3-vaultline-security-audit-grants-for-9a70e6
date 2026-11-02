@@ -1,269 +1,181 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-declare_id!("VLinE6bK8c6QeS9f7yZc9YdM7XbQ8mQnL1V2A3B4C5D");
-
-pub const GRANT_TOTAL_ALLOCATION: u64 = 4_000_000_000; // 4,000 USDC (6 decimals)
-pub const TRANCHE_1_AMOUNT: u64 = 1_000_000_000;        // 25%: Scope & Threat Model
-pub const TRANCHE_2_AMOUNT: u64 = 2_000_000_000;        // 50%: Draft Vulnerability Report
-pub const TRANCHE_3_AMOUNT: u64 = 1_000_000_000;        // 25%: Remediation & Sign-off
+declare_id!("V1tLineAuditGrant1111111111111111111111111111");
 
 #[program]
-pub mod vaultline_grants {
+pub mod vaultline_grant {
     use super::*;
 
-    /// Initializes the global Vaultline Grant Pool treasury.
-    pub fn initialize_pool(
-        ctx: Context<InitializePool>,
-        pool_bump: u8,
+    /// Initialize a new Vaultline Audit Grant for a Colosseum hackathon project.
+    pub fn initialize_grant(
+        ctx: Context<InitializeGrant>,
+        project_id: String,
+        grant_amount: u64,
+        copay_amount: u64,
     ) -> Result<()> {
-        let pool = &mut ctx.accounts.grant_pool;
-        pool.admin = ctx.accounts.admin.key();
-        pool.usdc_mint = ctx.accounts.usdc_mint.key();
-        pool.total_allocated = 0;
-        pool.total_disbursed = 0;
-        pool.grant_count = 0;
-        pool.bump = pool_bump;
-        Ok(())
-    }
+        require!(project_id.len() <= 64, GrantError::StringTooLong);
+        require!(grant_amount > 0, GrantError::InvalidAmount);
 
-    /// Allocates an escrow grant of 4,000 USDC for a verified Colosseum project.
-    pub fn create_audit_grant(
-        ctx: Context<CreateAuditGrant>,
-        project_id: [u8; 32],
-        project_name: String,
-        repo_commit_hash: [u8; 32],
-    ) -> Result<()> {
-        require!(project_name.len() <= 64, VaultlineError::NameTooLong);
-
-        let grant = &mut ctx.accounts.audit_grant;
-        let pool = &mut ctx.accounts.grant_pool;
-
-        grant.project_id = project_id;
-        grant.project_name = project_name;
-        grant.applicant = ctx.accounts.applicant.key();
+        let grant = &mut ctx.accounts.grant_account;
+        grant.admin = ctx.accounts.admin.key();
+        grant.project_authority = ctx.accounts.project_authority.key();
         grant.auditor = ctx.accounts.auditor.key();
-        grant.repo_commit_hash = repo_commit_hash;
-        grant.status = GrantStatus::Initialized;
-        grant.total_allocated = GRANT_TOTAL_ALLOCATION;
-        grant.total_disbursed = 0;
-        grant.current_milestone = 0;
-        grant.bump = ctx.bumps.audit_grant;
+        grant.usdc_mint = ctx.accounts.usdc_mint.key();
+        grant.grant_amount = grant_amount;
+        grant.copay_amount = copay_amount;
+        grant.total_funded = 0;
+        grant.project_id = project_id;
+        grant.scope_commit_hash = [0u8; 32];
+        grant.state = GrantState::Created;
+        grant.bump = ctx.bumps.grant_account;
         grant.vault_bump = ctx.bumps.grant_vault;
 
-        // Initialize 3 programmatic milestones
-        grant.milestones[0] = Milestone {
-            target_amount: TRANCHE_1_AMOUNT,
-            state: MilestoneState::Pending,
-            deliverable_hash: [0u8; 32],
-            completion_timestamp: 0,
-        };
-        grant.milestones[1] = Milestone {
-            target_amount: TRANCHE_2_AMOUNT,
-            state: MilestoneState::Pending,
-            deliverable_hash: [0u8; 32],
-            completion_timestamp: 0,
-        };
-        grant.milestones[2] = Milestone {
-            target_amount: TRANCHE_3_AMOUNT,
-            state: MilestoneState::Pending,
-            deliverable_hash: [0u8; 32],
-            completion_timestamp: 0,
-        };
-
-        // Transfer 4,000 USDC from funder to grant escrow vault
-        let decimals = ctx.accounts.usdc_mint.decimals;
-        token_interface::transfer_checked(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                TransferChecked {
-                    from: ctx.accounts.funder_token_account.to_account_info(),
-                    mint: ctx.accounts.usdc_mint.to_account_info(),
-                    to: ctx.accounts.grant_vault.to_account_info(),
-                    authority: ctx.accounts.funder.to_account_info(),
-                },
-            ),
-            GRANT_TOTAL_ALLOCATION,
-            decimals,
-        )?;
-
-        pool.total_allocated = pool
-            .total_allocated
-            .checked_add(GRANT_TOTAL_ALLOCATION)
-            .ok_or(VaultlineError::MathOverflow)?;
-        pool.grant_count = pool
-            .grant_count
-            .checked_add(1)
-            .ok_or(VaultlineError::MathOverflow)?;
-
-        emit!(GrantCreatedEvent {
-            project_id,
-            applicant: grant.applicant,
-            auditor: grant.auditor,
-            total_allocated: GRANT_TOTAL_ALLOCATION,
+        emit!(GrantInitialized {
+            grant: grant.key(),
+            project: grant.project_authority,
+            grant_amount,
+            copay_amount,
         });
 
         Ok(())
     }
 
-    /// Auditor commits a cryptographic artifact hash for the active milestone deliverable.
-    pub fn submit_milestone_deliverable(
-        ctx: Context<SubmitDeliverable>,
-        milestone_index: u8,
-        deliverable_hash: [u8; 32],
-    ) -> Result<()> {
-        let grant = &mut ctx.accounts.audit_grant;
-        let index = milestone_index as usize;
-
-        require!(index < 3, VaultlineError::InvalidMilestoneIndex);
+    /// Fund the grant with USDC (Vaultline grant portion or Project co-pay portion).
+    pub fn fund_grant(ctx: Context<FundGrant>, amount: u64) -> Result<()> {
+        let grant = &mut ctx.accounts.grant_account;
         require!(
-            grant.status != GrantStatus::Cancelled && grant.status != GrantStatus::Completed,
-            VaultlineError::GrantInactive
-        );
-        require!(
-            grant.current_milestone == milestone_index,
-            VaultlineError::MilestoneSequenceViolation
+            grant.state == GrantState::Created || grant.state == GrantState::PartiallyFunded,
+            GrantError::InvalidStateTransition
         );
 
-        let milestone = &mut grant.milestones[index];
-        require!(
-            milestone.state == MilestoneState::Pending,
-            VaultlineError::DeliverableAlreadySubmitted
-        );
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.funder_token_account.to_account_info(),
+            to: ctx.accounts.grant_vault.to_account_info(),
+            authority: ctx.accounts.funder.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+        token::transfer(cpi_ctx, amount)?;
 
-        milestone.deliverable_hash = deliverable_hash;
-        milestone.state = MilestoneState::Submitted;
+        grant.total_funded = grant.total_funded.checked_add(amount).ok_or(GrantError::MathOverflow)?;
+        let required_total = grant.grant_amount.checked_add(grant.copay_amount).ok_or(GrantError::MathOverflow)?;
 
-        if grant.status == GrantStatus::Initialized {
-            grant.status = GrantStatus::InProgress;
+        if grant.total_funded >= required_total {
+            grant.state = GrantState::FullyFunded;
+        } else {
+            grant.state = GrantState::PartiallyFunded;
         }
 
-        emit!(MilestoneSubmittedEvent {
-            project_id: grant.project_id,
-            milestone_index,
-            deliverable_hash,
+        emit!(GrantFunded {
+            grant: grant.key(),
+            funder: ctx.accounts.funder.key(),
+            amount,
+            total_funded: grant.total_funded,
         });
 
         Ok(())
     }
 
-    /// Admin / Grant Oracle approves deliverable and releases USDC tranche directly to the Auditor.
-    pub fn approve_and_disburse(
-        ctx: Context<ApproveAndDisburse>,
-        milestone_index: u8,
+    /// Record the cryptographic Git commit hash and AST scope digest of the Colosseum project.
+    pub fn record_scope(
+        ctx: Context<RecordScope>,
+        commit_hash: [u8; 32],
+        program_ids: Vec<Pubkey>,
     ) -> Result<()> {
-        let grant = &mut ctx.accounts.audit_grant;
-        let pool = &mut ctx.accounts.grant_pool;
-        let index = milestone_index as usize;
+        let grant = &mut ctx.accounts.grant_account;
+        require!(grant.state == GrantState::FullyFunded, GrantError::InvalidStateTransition);
+        require!(program_ids.len() > 0 && program_ids.len() <= 8, GrantError::InvalidScopeList);
 
-        require!(index < 3, VaultlineError::InvalidMilestoneIndex);
-        require!(
-            grant.current_milestone == milestone_index,
-            VaultlineError::MilestoneSequenceViolation
-        );
+        grant.scope_commit_hash = commit_hash;
+        grant.state = GrantState::ScopeLocked;
 
-        let milestone = &mut grant.milestones[index];
-        require!(
-            milestone.state == MilestoneState::Submitted,
-            VaultlineError::MilestoneNotSubmitted
-        );
-
-        let payout_amount = milestone.target_amount;
-        let clock = Clock::get()?;
-
-        milestone.state = MilestoneState::Approved;
-        milestone.completion_timestamp = clock.unix_timestamp;
-
-        grant.total_disbursed = grant
-            .total_disbursed
-            .checked_add(payout_amount)
-            .ok_or(VaultlineError::MathOverflow)?;
-
-        pool.total_disbursed = pool
-            .total_disbursed
-            .checked_add(payout_amount)
-            .ok_or(VaultlineError::MathOverflow)?;
-
-        // Execute CPI transfer from PDA escrow vault to Auditor ATA
-        let project_id_bytes = grant.project_id;
+        // Tranche 1: Release 25% of grant upon formal scope verification
+        let tranche_1 = grant.total_funded.checked_mul(25).unwrap().checked_div(100).unwrap();
+        
         let seeds = &[
             b"grant_vault",
-            project_id_bytes.as_ref(),
+            grant.to_account_info().key.as_ref(),
             &[grant.vault_bump],
         ];
         let signer = &[&seeds[..]];
 
-        token_interface::transfer_checked(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                TransferChecked {
-                    from: ctx.accounts.grant_vault.to_account_info(),
-                    mint: ctx.accounts.usdc_mint.to_account_info(),
-                    to: ctx.accounts.auditor_token_account.to_account_info(),
-                    authority: ctx.accounts.grant_vault.to_account_info(),
-                },
-                signer,
-            ),
-            payout_amount,
-            ctx.accounts.usdc_mint.decimals,
-        )?;
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.grant_vault.to_account_info(),
+            to: ctx.accounts.auditor_token_account.to_account_info(),
+            authority: ctx.accounts.grant_vault.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer,
+        );
+        token::transfer(cpi_ctx, tranche_1)?;
 
-        if index == 2 {
-            grant.status = GrantStatus::Completed;
-            emit!(GrantCompletedEvent {
-                project_id: grant.project_id,
-                total_disbursed: grant.total_disbursed,
-            });
-        } else {
-            grant.current_milestone = milestone_index + 1;
-        }
-
-        emit!(MilestoneDisbursedEvent {
-            project_id: grant.project_id,
-            milestone_index,
-            amount_disbursed: payout_amount,
-            auditor: grant.auditor,
+        emit!(ScopeLocked {
+            grant: grant.key(),
+            commit_hash,
+            tranche_released: tranche_1,
         });
 
         Ok(())
     }
 
-    /// Admin can cancel a defaulted project grant and reclaim unreleased USDC to the treasury.
-    pub fn cancel_defaulted_grant(ctx: Context<CancelDefaultedGrant>) -> Result<()> {
-        let grant = &mut ctx.accounts.audit_grant;
-        require!(grant.status != GrantStatus::Completed, VaultlineError::GrantAlreadyCompleted);
+    /// Audit is completed: publish the immutable Attestation Certificate PDA and disburse final funds.
+    pub fn finalize_audit_and_attest(
+        ctx: Context<FinalizeAuditAndAttest>,
+        report_hash: [u8; 32],
+        critical_count: u8,
+        high_count: u8,
+        medium_count: u8,
+        low_count: u8,
+        security_score: u8,
+    ) -> Result<()> {
+        let grant = &mut ctx.accounts.grant_account;
+        require!(grant.state == GrantState::ScopeLocked, GrantError::InvalidStateTransition);
+        require!(security_score <= 100, GrantError::InvalidScore);
 
+        let attestation = &mut ctx.accounts.attestation_certificate;
+        attestation.grant = grant.key();
+        attestation.project_authority = grant.project_authority;
+        attestation.auditor = grant.auditor;
+        attestation.report_hash = report_hash;
+        attestation.critical_issues = critical_count;
+        attestation.high_issues = high_count;
+        attestation.medium_issues = medium_count;
+        attestation.low_issues = low_count;
+        attestation.security_score = security_score;
+        attestation.timestamp = Clock::get()?.unix_timestamp;
+        attestation.bump = ctx.bumps.attestation_certificate;
+
+        grant.state = GrantState::Certified;
+
+        // Disburse remaining 75% balance of escrow to the auditor
         let remaining_balance = ctx.accounts.grant_vault.amount;
-        if remaining_balance > 0 {
-            let project_id_bytes = grant.project_id;
-            let seeds = &[
-                b"grant_vault",
-                project_id_bytes.as_ref(),
-                &[grant.vault_bump],
-            ];
-            let signer = &[&seeds[..]];
+        let seeds = &[
+            b"grant_vault",
+            grant.to_account_info().key.as_ref(),
+            &[grant.vault_bump],
+        ];
+        let signer = &[&seeds[..]];
 
-            token_interface::transfer_checked(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    TransferChecked {
-                        from: ctx.accounts.grant_vault.to_account_info(),
-                        mint: ctx.accounts.usdc_mint.to_account_info(),
-                        to: ctx.accounts.admin_token_account.to_account_info(),
-                        authority: ctx.accounts.grant_vault.to_account_info(),
-                    },
-                    signer,
-                ),
-                remaining_balance,
-                ctx.accounts.usdc_mint.decimals,
-            )?;
-        }
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.grant_vault.to_account_info(),
+            to: ctx.accounts.auditor_token_account.to_account_info(),
+            authority: ctx.accounts.grant_vault.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer,
+        );
+        token::transfer(cpi_ctx, remaining_balance)?;
 
-        grant.status = GrantStatus::Cancelled;
-
-        emit!(GrantCancelledEvent {
-            project_id: grant.project_id,
-            reclaimed_amount: remaining_balance,
+        emit!(AuditCertified {
+            grant: grant.key(),
+            attestation: attestation.key(),
+            report_hash,
+            security_score,
+            final_payout: remaining_balance,
         });
 
         Ok(())
@@ -271,290 +183,234 @@ pub mod vaultline_grants {
 }
 
 // -----------------------------------------------------------------------------
-// ACCOUNT STRUCTS & STATES
-// -----------------------------------------------------------------------------
-
-#[account]
-#[derive(Default)]
-pub struct GrantPool {
-    pub admin: Pubkey,          // 32
-    pub usdc_mint: Pubkey,      // 32
-    pub total_allocated: u64,   // 8
-    pub total_disbursed: u64,   // 8
-    pub grant_count: u64,       // 8
-    pub bump: u8,               // 1
-}
-
-impl GrantPool {
-    pub const LEN: usize = 8 + 32 + 32 + 8 + 8 + 8 + 1;
-}
-
-#[account]
-pub struct AuditGrant {
-    pub project_id: [u8; 32],       // 32
-    pub project_name: String,        // 4 + 64
-    pub applicant: Pubkey,          // 32
-    pub auditor: Pubkey,            // 32
-    pub repo_commit_hash: [u8; 32], // 32
-    pub status: GrantStatus,         // 1
-    pub total_allocated: u64,       // 8
-    pub total_disbursed: u64,       // 8
-    pub current_milestone: u8,      // 1
-    pub milestones: [Milestone; 3],  // 3 * 73 = 219
-    pub bump: u8,                   // 1
-    pub vault_bump: u8,             // 1
-}
-
-impl AuditGrant {
-    pub const LEN: usize = 8 + 32 + (4 + 64) + 32 + 32 + 32 + 1 + 8 + 8 + 1 + (3 * Milestone::LEN) + 1 + 1;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
-pub enum GrantStatus {
-    Initialized,
-    InProgress,
-    Completed,
-    Cancelled,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
-pub enum MilestoneState {
-    Pending,
-    Submitted,
-    Approved,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
-pub struct Milestone {
-    pub target_amount: u64,           // 8
-    pub state: MilestoneState,        // 1
-    pub deliverable_hash: [u8; 32],   // 32
-    pub completion_timestamp: i64,    // 8
-}
-
-impl Milestone {
-    pub const LEN: usize = 8 + 1 + 32 + 8;
-}
-
-// -----------------------------------------------------------------------------
-// CONTEXTS
+// Account Contexts
 // -----------------------------------------------------------------------------
 
 #[derive(Accounts)]
-pub struct InitializePool<'info> {
+#[instruction(project_id: String)]
+pub struct InitializeGrant<'info> {
     #[account(
         init,
         payer = admin,
-        space = GrantPool::LEN,
-        seeds = [b"grant_pool"],
+        space = 8 + GrantAccount::INIT_SPACE,
+        seeds = [b"grant", project_authority.key().as_ref(), project_id.as_bytes()],
         bump
     )]
-    pub grant_pool: Account<'info, GrantPool>,
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
-    #[account(mut)]
-    pub admin: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(project_id: [u8; 32])]
-pub struct CreateAuditGrant<'info> {
-    #[account(
-        mut,
-        seeds = [b"grant_pool"],
-        bump = grant_pool.bump,
-        has_one = admin,
-    )]
-    pub grant_pool: Account<'info, GrantPool>,
+    pub grant_account: Account<'info, GrantAccount>,
 
     #[account(
         init,
-        payer = funder,
-        space = AuditGrant::LEN,
-        seeds = [b"audit_grant", project_id.as_ref()],
-        bump
-    )]
-    pub audit_grant: Account<'info, AuditGrant>,
-
-    #[account(
-        init,
-        payer = funder,
-        seeds = [b"grant_vault", project_id.as_ref()],
+        payer = admin,
+        seeds = [b"grant_vault", grant_account.key().as_ref()],
         bump,
         token::mint = usdc_mint,
         token::authority = grant_vault,
     )]
-    pub grant_vault: InterfaceAccount<'info, TokenAccount>,
+    pub grant_vault: Account<'info, TokenAccount>,
 
-    #[account(address = grant_pool.usdc_mint)]
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
+    pub usdc_mint: Account<'info, Mint>,
 
-    #[account(
-        mut,
-        constraint = funder_token_account.mint == usdc_mint.key(),
-        constraint = funder_token_account.owner == funder.key()
-    )]
-    pub funder_token_account: InterfaceAccount<'info, TokenAccount>,
+    /// CHECK: The project's team lead / Colosseum verified authority
+    pub project_authority: UncheckedAccount<'info>,
 
-    pub admin: Signer<'info>,
+    /// CHECK: Vaultline Certified Lead Auditor wallet
+    pub auditor: UncheckedAccount<'info>,
+
     #[account(mut)]
-    pub funder: Signer<'info>,
-    /// CHECK: Colosseum participant wallet
-    pub applicant: AccountInfo<'info>,
-    /// CHECK: Audit partner wallet
-    pub auditor: AccountInfo<'info>,
+    pub admin: Signer<'info>,
 
-    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
-#[instruction(milestone_index: u8)]
-pub struct SubmitDeliverable<'info> {
+pub struct FundGrant<'info> {
+    #[account(mut)]
+    pub grant_account: Account<'info, GrantAccount>,
+
     #[account(
         mut,
-        seeds = [b"audit_grant", audit_grant.project_id.as_ref()],
-        bump = audit_grant.bump,
-        has_one = auditor,
+        seeds = [b"grant_vault", grant_account.key().as_ref()],
+        bump = grant_account.vault_bump
     )]
-    pub audit_grant: Account<'info, AuditGrant>,
+    pub grant_vault: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = funder_token_account.mint == grant_account.usdc_mint @ GrantError::MintMismatch
+    )]
+    pub funder_token_account: Account<'info, TokenAccount>,
+
+    pub funder: Signer<'info>,
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct RecordScope<'info> {
+    #[account(
+        mut,
+        has_one = auditor @ GrantError::UnauthorizedAuditor,
+        has_one = usdc_mint @ GrantError::MintMismatch
+    )]
+    pub grant_account: Account<'info, GrantAccount>,
+
+    #[account(
+        mut,
+        seeds = [b"grant_vault", grant_account.key().as_ref()],
+        bump = grant_account.vault_bump
+    )]
+    pub grant_vault: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        constraint = auditor_token_account.mint == grant_account.usdc_mint @ GrantError::MintMismatch,
+        constraint = auditor_token_account.owner == auditor.key() @ GrantError::InvalidAuditorTokenAccount
+    )]
+    pub auditor_token_account: Account<'info, TokenAccount>,
+
     pub auditor: Signer<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
-#[instruction(milestone_index: u8)]
-pub struct ApproveAndDisburse<'info> {
+pub struct FinalizeAuditAndAttest<'info> {
     #[account(
         mut,
-        seeds = [b"grant_pool"],
-        bump = grant_pool.bump,
-        has_one = admin,
-        has_one = usdc_mint,
+        has_one = auditor @ GrantError::UnauthorizedAuditor,
+        has_one = usdc_mint @ GrantError::MintMismatch
     )]
-    pub grant_pool: Account<'info, GrantPool>,
+    pub grant_account: Account<'info, GrantAccount>,
 
     #[account(
-        mut,
-        seeds = [b"audit_grant", audit_grant.project_id.as_ref()],
-        bump = audit_grant.bump,
+        init,
+        payer = auditor,
+        space = 8 + AttestationCertificate::INIT_SPACE,
+        seeds = [b"attestation", grant_account.key().as_ref()],
+        bump
     )]
-    pub audit_grant: Account<'info, AuditGrant>,
-
-    #[account(
-        mut,
-        seeds = [b"grant_vault", audit_grant.project_id.as_ref()],
-        bump = audit_grant.vault_bump,
-        token::mint = usdc_mint,
-        token::authority = grant_vault,
-    )]
-    pub grant_vault: InterfaceAccount<'info, TokenAccount>,
+    pub attestation_certificate: Account<'info, AttestationCertificate>,
 
     #[account(
         mut,
-        constraint = auditor_token_account.owner == audit_grant.auditor,
-        constraint = auditor_token_account.mint == usdc_mint.key(),
+        seeds = [b"grant_vault", grant_account.key().as_ref()],
+        bump = grant_account.vault_bump
     )]
-    pub auditor_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
-    pub admin: Signer<'info>,
-    pub token_program: Interface<'info, TokenInterface>,
-}
-
-#[derive(Accounts)]
-pub struct CancelDefaultedGrant<'info> {
-    #[account(
-        mut,
-        seeds = [b"grant_pool"],
-        bump = grant_pool.bump,
-        has_one = admin,
-        has_one = usdc_mint,
-    )]
-    pub grant_pool: Account<'info, GrantPool>,
+    pub grant_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"audit_grant", audit_grant.project_id.as_ref()],
-        bump = audit_grant.bump,
+        constraint = auditor_token_account.mint == grant_account.usdc_mint @ GrantError::MintMismatch,
+        constraint = auditor_token_account.owner == auditor.key() @ GrantError::InvalidAuditorTokenAccount
     )]
-    pub audit_grant: Account<'info, AuditGrant>,
+    pub auditor_token_account: Account<'info, TokenAccount>,
 
-    #[account(
-        mut,
-        seeds = [b"grant_vault", audit_grant.project_id.as_ref()],
-        bump = audit_grant.vault_bump,
-        token::mint = usdc_mint,
-        token::authority = grant_vault,
-    )]
-    pub grant_vault: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut)]
+    pub auditor: Signer<'info>,
 
-    #[account(
-        mut,
-        constraint = admin_token_account.owner == admin.key(),
-        constraint = admin_token_account.mint == usdc_mint.key(),
-    )]
-    pub admin_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub usdc_mint: InterfaceAccount<'info, Mint>,
-    pub admin: Signer<'info>,
-    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 // -----------------------------------------------------------------------------
-// EVENTS & ERRORS
+// Data Structures & Errors
 // -----------------------------------------------------------------------------
 
-#[event]
-pub struct GrantCreatedEvent {
-    pub project_id: [u8; 32],
-    pub applicant: Pubkey,
+#[account]
+#[derive(InitSpace)]
+pub struct GrantAccount {
+    pub admin: Pubkey,
+    pub project_authority: Pubkey,
     pub auditor: Pubkey,
-    pub total_allocated: u64,
+    pub usdc_mint: Pubkey,
+    pub grant_amount: u64,
+    pub copay_amount: u64,
+    pub total_funded: u64,
+    #[max_len(64)]
+    pub project_id: String,
+    pub scope_commit_hash: [u8; 32],
+    pub state: GrantState,
+    pub bump: u8,
+    pub vault_bump: u8,
 }
 
-#[event]
-pub struct MilestoneSubmittedEvent {
-    pub project_id: [u8; 32],
-    pub milestone_index: u8,
-    pub deliverable_hash: [u8; 32],
-}
-
-#[event]
-pub struct MilestoneDisbursedEvent {
-    pub project_id: [u8; 32],
-    pub milestone_index: u8,
-    pub amount_disbursed: u64,
+#[account]
+#[derive(InitSpace)]
+pub struct AttestationCertificate {
+    pub grant: Pubkey,
+    pub project_authority: Pubkey,
     pub auditor: Pubkey,
+    pub report_hash: [u8; 32],
+    pub critical_issues: u8,
+    pub high_issues: u8,
+    pub medium_issues: u8,
+    pub low_issues: u8,
+    pub security_score: u8,
+    pub timestamp: i64,
+    pub bump: u8,
 }
 
-#[event]
-pub struct GrantCompletedEvent {
-    pub project_id: [u8; 32],
-    pub total_disbursed: u64,
-}
-
-#[event]
-pub struct GrantCancelledEvent {
-    pub project_id: [u8; 32],
-    pub reclaimed_amount: u64,
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum GrantState {
+    Created,
+    PartiallyFunded,
+    FullyFunded,
+    ScopeLocked,
+    Certified,
+    Revoked,
 }
 
 #[error_code]
-pub enum VaultlineError {
-    #[msg("Project name exceeds 64 bytes.")]
-    NameTooLong,
-    #[msg("Invalid milestone index provided.")]
-    InvalidMilestoneIndex,
-    #[msg("Milestone deliverables must be completed sequentially.")]
-    MilestoneSequenceViolation,
-    #[msg("Deliverable for this milestone was already submitted.")]
-    DeliverableAlreadySubmitted,
-    #[msg("Milestone deliverable has not been submitted yet.")]
-    MilestoneNotSubmitted,
-    #[msg("This grant is no longer active.")]
-    GrantInactive,
-    #[msg("Grant is already marked completed.")]
-    GrantAlreadyCompleted,
+pub enum GrantError {
+    #[msg("String length exceeds the maximum allowed boundary.")]
+    StringTooLong,
+    #[msg("Invalid funding or grant amount.")]
+    InvalidAmount,
     #[msg("Arithmetic overflow occurred.")]
     MathOverflow,
+    #[msg("State transition is disallowed in current status.")]
+    InvalidStateTransition,
+    #[msg("Token account mint mismatch.")]
+    MintMismatch,
+    #[msg("Signer is not the authorized auditor.")]
+    UnauthorizedAuditor,
+    #[msg("Invalid recipient token account for auditor.")]
+    InvalidAuditorTokenAccount,
+    #[msg("Project scope must specify between 1 and 8 program accounts.")]
+    InvalidScopeList,
+    #[msg("Security score must be an integer between 0 and 100.")]
+    InvalidScore,
+}
+
+#[event]
+pub struct GrantInitialized {
+    pub grant: Pubkey,
+    pub project: Pubkey,
+    pub grant_amount: u64,
+    pub copay_amount: u64,
+}
+
+#[event]
+pub struct GrantFunded {
+    pub grant: Pubkey,
+    pub funder: Pubkey,
+    pub amount: u64,
+    pub total_funded: u64,
+}
+
+#[event]
+pub struct ScopeLocked {
+    pub grant: Pubkey,
+    pub commit_hash: [u8; 32],
+    pub tranche_released: u64,
+}
+
+#[event]
+pub struct AuditCertified {
+    pub grant: Pubkey,
+    pub attestation: Pubkey,
+    pub report_hash: [u8; 32],
+    pub security_score: u8,
+    pub final_payout: u64,
 }

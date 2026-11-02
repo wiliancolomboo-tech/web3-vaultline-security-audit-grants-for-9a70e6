@@ -1,0 +1,5 @@
+Built with @coral_xyz Anchor, featuring automated @resend receipts & Discord webhooks for instant auditor/grantee alignment.
+
+Turnkey, zero-downtime dockerization ready for deployment.
+
+Colosseum teams get verified security. Sponsors get 100% capital protection. 🚀🦀

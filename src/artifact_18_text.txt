@@ -1,0 +1,8 @@
+Every milestone event streams straight to founders via @resend and SecOps webhooks with real-time severity triage.
+
+Complete code, Anchor smart contract, and turnkey Docker agent are 100% open source & live on Devnet! 🚀
+
+Let’s secure the next generation of Solana giants with @VaultlineHQ. 
+
+Github: https://github.com/vaultline-protocol/colosseum-audit-grants
+#Solana #Colosseum #Web3Security #Anchor

@@ -1,0 +1,13 @@
+1/3 🛡️ Excited to introduce Vaultline GuardGrant (V-Guard) — the automated security audit escrow & triage pipeline for @Colosseum @solana hackathon builders!
+
+Up to 4,000 USDC per project, disbursed programmatically across audit milestones. Zero manual delays. ⚡🧵👇
+
+2/3 🔍 Hackathon projects often lose days navigating audit intake. V-Guard solves this:
+✅ Automated Rust AST triage checks common Solana flaws (signer gaps, CPI risks)
+✅ Tranche-based escrow (20% Intake / 50% Findings / 30% Remediation)
+✅ Instant @resend + Slack notifications
+
+3/3 🤝 By securing Colosseum winners early, @Vaultline accelerates production-grade protocols onto Solana mainnet safely.
+
+Open-source Anchor program, enterprise worker CLI, and test suite are ready for deployment! 🚀
+#Solana #Colosseum #Web3Security #Anchor

@@ -1,0 +1,8 @@
+client/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── services/
+    │   ├── notificationService.ts
+    │   └── solanaService.ts
+    └── vaultline-cli.ts

@@ -1,11 +1,14 @@
-+--------------------------------------------------------------------------------------------------+
-|                                    VALUE PROPOSITION MATRIX                                     |
-+------------------------------+----------------------------------+--------------------------------+
-| Metric / Feature             | Legacy Manual Audit Subsidy      | Vaultline Grant Protocol       |
-+------------------------------+----------------------------------+--------------------------------+
-| Grant Disbursement Latency   | 14-30 Business Days              | Sub-second upon signature      |
-| Capital Security             | Unilateral trust in counterparty | Non-custodial PDA vault escrow |
-| Verification Architecture    | Manual email exchange            | SHA-256 deliverable state root |
-| Sponsor Audit Trail          | Fragmented spreadsheets          | 100% On-Chain deterministic ID |
-| Integration Readiness        | None                             | Slack/Discord + Resend Webhooks|
-+------------------------------+----------------------------------+--------------------------------+
++---------------------------------------------------------------------------------------+
+|                                   VAULTLINE GRANTPASS                                 |
+|                                                                                       |
+|   Colosseum Project              Vaultline Escrow Program          Security Auditor   |
+|   +-------------------+          +-----------------------+         +---------------+  |
+|   |  GitHub Commit    | -------> |  PDA-Controlled Vault | <------ | Audit Report  |  |
+|   |  Colosseum ID     |          |  4,000 USDC Escrow    |         | SHA-256 Hash  |  |
+|   +-------------------+          +-----------------------+         +---------------+  |
+|             |                                |                             |          |
+|             +----------> Milestone Approval & Tranche Release <------------+          |
+|                                              |                                        |
+|                                              v                                        |
+|                          Enterprise Webhooks (Slack / Resend)                         |
++---------------------------------------------------------------------------------------+

@@ -1,0 +1,13 @@
+1/3 🛡️ Hackathon projects shouldn't launch on Solana without ironclad audits. But traditional grant distribution is broken: delayed invoices, manual wire transfers, and zero cryptographic link between audited code & final reports.
+
+Introducing the @VaultlineSec Colosseum Audit Grant Protocol (`V-AGP`)! 🧵👇
+
+2/3 ⚡ Built on Solana Anchor:
+• Up to 4,000 $USDC locked in verifiable PDA escrows
+• 30% released automatically upon scoping & AST mapping
+• 70% released only when audit SHA-256 report hashes commit to Solana
+• Automated Slack & @resend attestations for founders & @ColosseumOrg
+
+3/3 🚢 No off-chain trust assumptions. Zero counterparty risk. Colosseum winners get audited faster, auditors get paid on finality, and Solana stays impenetrable.
+
+Full open-source repo & turnkey Docker setup: github.com/vaultline-sec/colosseum-audit-grant-protocol 🛡️🦀🚀

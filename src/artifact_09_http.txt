@@ -1,0 +1,12 @@
+GET http://localhost:8080/health
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": "healthy",
+  "program": "V1tLineEscrow11111111111111111111111111111111",
+  "connection": "connected",
+  "activeEscrows": 14,
+  "totalDisbursedUSDC": 56000,
+  "uptimeSeconds": 86420
+}

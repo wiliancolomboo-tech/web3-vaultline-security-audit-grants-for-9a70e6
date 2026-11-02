@@ -1,0 +1,19 @@
+================================================================================
+          VAULTLINE SECURITY AUDIT GRANTS RUNBOOK (SOP-SEC-01)
+================================================================================
+
+1. ROUTINE AUDIT ONBOARDING:
+   - Run `vaultline-cli init-grant` specifying Colosseum project address & USDC amount.
+   - Verify that 4,000 USDC is locked into the PDA vault:
+     `spl-token balance <ESCROW_VAULT_PDA>`
+
+2. MILESTONE CADENCE & PAYOUT DISBURSEMENT:
+   - Milestone 1 (25% - 1,000 USDC): Architecture scoping & threat model review.
+   - Milestone 2 (25% - 1,000 USDC): Draft findings report delivered to team.
+   - Milestone 3 (25% - 1,000 USDC): PR fix review & remediation testing.
+   - Milestone 4 (25% - 1,000 USDC): Final PDF checksum committed to Solana Ledger.
+
+3. EMERGENCY RESOLUTION & DISPUTE ESCALATION:
+   - In the event of grantee unresponsiveness (>14 days), the Sponsor wallet 
+     retains emergency administrative revocation to prevent stranded grant funds.
+   - Slack monitor broadcasts all critical state transitions with signature logs.

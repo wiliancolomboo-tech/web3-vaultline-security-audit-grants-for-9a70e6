@@ -1,0 +1,19 @@
+1/4 🛡️ Announcing Vaultline GrantVault: The institutional, zero-trust audit grant protocol built specifically for @Colosseum builders on @Solana!
+
+We're replacing slow, manual grants with automated, on-chain milestone escrow of up to 4,000 USDC per project. Here is how it works 👇🧵
+
+2/4 ⚡ Trust through cryptographic verification:
+Audit grants shouldn't be disbursed blindly. GrantVault locks 4k USDC in deterministic PDAs and executes progressive, 3-stage releases:
+🔹 25% on Code Freeze & Scoping
+🔹 35% on Interim Findings
+🔹 40% on Final Remediation Attestation + Public CID
+
+3/4 🚀 Enterprise-grade DX:
+Zero manual tracking. Integrated with @resendlabs & Slack webhooks, every audit transition triggers instant cryptographic receipts and auditor payouts in <400ms on Solana. 
+
+No ghosting. No lost funds. Pure security velocity.
+
+4/4 Built for the Colosseum ecosystem. Open-source, turnkey, and battle-tested with full Anchor test suites and 1-click Docker infra.
+
+Let’s secure the next generation of Solana unicorns! 🛡️⚡
+Read the architecture and check out the repo below: [github.com/vaultline/colosseum-audit-grants]

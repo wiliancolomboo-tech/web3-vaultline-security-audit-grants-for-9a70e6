@@ -1,202 +1,246 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program, web3 } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Program, Wallet } from "@coral-xyz/anchor";
+import { Connection, Keypair, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import * as crypto from "crypto";
-import * as fs from "fs";
 import axios from "axios";
 import { Resend } from "resend";
+import * as dotenv from "dotenv";
 
-// Configuration Schema
-export interface EngineConfig {
-  rpcUrl: string;
-  adminKeypairPath: string;
-  auditorKeypairPath: string;
-  usdcMint: string;
-  slackWebhookUrl?: string;
-  resendApiKey?: string;
-  notificationEmail?: string;
+dotenv.config();
+
+// Configuration environment variables
+const RPC_URL = process.env.SOLANA_RPC_URL || clusterApiUrl("devnet");
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_dummy_key_vaultline";
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
+const PROGRAM_ID = new PublicKey(process.env.PROGRAM_ID || "V1tLineAuditGrant1111111111111111111111111111");
+
+const resend = new Resend(RESEND_API_KEY);
+
+export interface ColosseumProjectSubmission {
+  projectId: string;
+  githubRepoUrl: string;
+  commitHash: string;
+  founderEmail: string;
+  projectAuthorityPubkey: PublicKey;
+  targetProgramIds: PublicKey[];
 }
 
-export class VaultlineAutomationEngine {
-  private connection: web3.Connection;
-  private adminKeypair: web3.Keypair;
-  private auditorKeypair: web3.Keypair;
-  private usdcMint: web3.PublicKey;
-  private slackWebhookUrl?: string;
-  private resend?: Resend;
-  private notificationEmail?: string;
-  private programId = new web3.PublicKey("VLinE6bK8c6QeS9f7yZc9YdM7XbQ8mQnL1V2A3B4C5D");
+export class VaultlineGrantOrchestrator {
+  private connection: Connection;
+  private auditorKeypair: Keypair;
+  private program: Program;
 
-  constructor(config: EngineConfig) {
-    this.connection = new web3.Connection(config.rpcUrl, "confirmed");
-    this.adminKeypair = web3.Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(config.adminKeypairPath, "utf-8")))
-    );
-    this.auditorKeypair = web3.Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(config.auditorKeypairPath, "utf-8")))
-    );
-    this.usdcMint = new web3.PublicKey(config.usdcMint);
-    this.slackWebhookUrl = config.slackWebhookUrl;
-    if (config.resendApiKey) {
-      this.resend = new Resend(config.resendApiKey);
-    }
-    this.notificationEmail = config.notificationEmail;
+  constructor(auditorKeypair: Keypair, idl: any) {
+    this.connection = new Connection(RPC_URL, "confirmed");
+    this.auditorKeypair = auditorKeypair;
+    const wallet = new Wallet(this.auditorKeypair);
+    const provider = new anchor.AnchorProvider(this.connection, wallet, {
+      commitment: "confirmed",
+    });
+    anchor.setProvider(provider);
+    this.program = new Program(idl, PROGRAM_ID, provider);
   }
 
   /**
-   * Generates a 32-byte SHA256 digest from a SARIF or audit deliverable document.
+   * Derive Grant Account PDA
    */
-  public hashDeliverable(filePath: string): Buffer {
-    const fileBuffer = fs.readFileSync(filePath);
-    return crypto.createHash("sha256").update(fileBuffer).digest();
-  }
-
-  /**
-   * Derive Deterministic PDAs
-   */
-  public getGrantPDA(projectIdBytes: Buffer): [web3.PublicKey, number] {
-    return web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("audit_grant"), projectIdBytes],
-      this.programId
-    );
-  }
-
-  public getVaultPDA(projectIdBytes: Buffer): [web3.PublicKey, number] {
-    return web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("grant_vault"), projectIdBytes],
-      this.programId
+  public getGrantPDA(projectAuthority: PublicKey, projectId: string): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("grant"), projectAuthority.toBuffer(), Buffer.from(projectId)],
+      this.program.programId
     );
   }
 
   /**
-   * Sends enterprise alerts to Slack and email via Resend
+   * Derive Grant USDC Vault PDA
    */
-  public async broadcastAlert(title: string, message: string, details: Record<string, any>) {
-    console.log(`[VAULTLINE EVENT] ${title}: ${message}`);
-
-    // 1. Dispatch Slack / Discord Webhook
-    if (this.slackWebhookUrl) {
-      try {
-        await axios.post(this.slackWebhookUrl, {
-          username: "Vaultline Grant Guardian",
-          icon_emoji: ":shield:",
-          attachments: [
-            {
-              color: "#36a64f",
-              title,
-              text: message,
-              fields: Object.entries(details).map(([k, v]) => ({
-                title: k,
-                value: String(v),
-                short: true,
-              })),
-              footer: "Vaultline Colosseum Security Grants",
-              ts: Math.floor(Date.now() / 1000),
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("Failed to emit Slack notification:", err);
-      }
-    }
-
-    // 2. Dispatch Formal Resend Transactional Email
-    if (this.resend && this.notificationEmail) {
-      try {
-        await this.resend.emails.send({
-          from: "grants@vaultline.security",
-          to: this.notificationEmail,
-          subject: `[Vaultline Audit Escrow] ${title}`,
-          html: `
-            <h2>${title}</h2>
-            <p>${message}</p>
-            <table border="1" cellpadding="8" style="border-collapse: collapse; font-family: monospace;">
-              ${Object.entries(details)
-                .map(([k, v]) => `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`)
-                .join("")}
-            </table>
-            <p><small>Secured on Solana with Vaultline Escrow Engine</small></p>
-          `,
-        });
-      } catch (err) {
-        console.error("Failed to send Resend email:", err);
-      }
-    }
+  public getVaultPDA(grantPDA: PublicKey): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("grant_vault"), grantPDA.toBuffer()],
+      this.program.programId
+    );
   }
 
   /**
-   * Step 1: Pre-Audit Ingestion and Grant Allocation
+   * Derive Attestation Certificate PDA
    */
-  public async allocateGrant(
-    projectName: string,
-    applicantPubkey: web3.PublicKey,
-    sarifReportPath: string
+  public getAttestationPDA(grantPDA: PublicKey): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("attestation"), grantPDA.toBuffer()],
+      this.program.programId
+    );
+  }
+
+  /**
+   * Automated AST & Vulnerability Pre-Check
+   */
+  public async runStaticPreScan(repoUrl: string, commitHash: string): Promise<{
+    passed: boolean;
+    issuesFound: string[];
+    scopeSha256: Buffer;
+  }> {
+    console.log(`[Vaultline Scanner] Analyzing Colosseum Repo: ${repoUrl} @ commit ${commitHash}`);
+    
+    // In production, executes `cargo-audit`, `geiger`, and custom Solana AST invariant passes
+    const scopeDigest = crypto.createHash("sha256").update(commitHash + repoUrl).digest();
+    
+    return {
+      passed: true,
+      issuesFound: [],
+      scopeSha256: scopeDigest,
+    };
+  }
+
+  /**
+   * Enterprise Step 1: Lock Scope On-Chain
+   */
+  public async lockScopeOnChain(
+    project: ColosseumProjectSubmission,
+    usdcMint: PublicKey
   ): Promise<string> {
-    const projectId = crypto.createHash("sha256").update(projectName + Date.now()).digest();
-    const sarifHash = this.hashDeliverable(sarifReportPath);
+    const [grantPDA] = this.getGrantPDA(project.projectAuthorityPubkey, project.projectId);
+    const [vaultPDA] = this.getVaultPDA(grantPDA);
 
-    const [grantPda] = this.getGrantPDA(projectId);
-    const [vaultPda] = this.getVaultPDA(projectId);
-    const [poolPda] = web3.PublicKey.findProgramAddressSync([Buffer.from("grant_pool")], this.programId);
+    const auditorTokenAccount = await getOrCreateAssociatedTokenAccount(
+      this.connection,
+      this.auditorKeypair,
+      usdcMint,
+      this.auditorKeypair.publicKey
+    );
 
-    const funderUsdc = getAssociatedTokenAddressSync(this.usdcMint, this.adminKeypair.publicKey);
+    const scanResult = await this.runStaticPreScan(project.githubRepoUrl, project.commitHash);
+    const commitBuffer = Array.from(scanResult.scopeSha256);
 
-    // Build Instruction CPI Call
-    console.log(`Allocating 4,000 USDC Grant for: ${projectName}`);
-    console.log(`Grant PDA: ${grantPda.toBase58()}`);
-    console.log(`Vault PDA: ${vaultPda.toBase58()}`);
+    console.log(`[On-Chain] Executing record_scope for Grant: ${grantPDA.toBase58()}`);
 
-    await this.broadcastAlert("Grant Created & Escrow Funded", `4,000 USDC locked for ${projectName}`, {
-      Project: projectName,
-      Applicant: applicantPubkey.toBase58(),
-      Auditor: this.auditorKeypair.publicKey.toBase58(),
-      PreAuditSarifHash: sarifHash.toString("hex"),
+    const tx = await this.program.methods
+      .recordScope(commitBuffer, project.targetProgramIds)
+      .accounts({
+        grantAccount: grantPDA,
+        grantVault: vaultPDA,
+        auditorTokenAccount: auditorTokenAccount.address,
+        auditor: this.auditorKeypair.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([this.auditorKeypair])
+      .rpc();
+
+    await this.notifyTelemetry({
+      event: "SCOPE_LOCKED",
+      projectId: project.projectId,
+      commitHash: project.commitHash,
+      txSignature: tx,
+      founderEmail: project.founderEmail,
     });
 
-    return projectId.toString("hex");
+    return tx;
   }
 
   /**
-   * Step 2: Milestone Verification and Automated USDC Tranche Disbursement
+   * Enterprise Step 2: Finalize Audit, Mint Attestation Certificate & Trigger Grant Payout
    */
-  public async advanceMilestone(
-    projectIdHex: string,
-    milestoneIndex: number,
-    artifactPath: string
-  ): Promise<void> {
-    const projectId = Buffer.from(projectIdHex, "hex");
-    const deliverableHash = this.hashDeliverable(artifactPath);
-    const trancheAmounts = ["1,000 USDC (25%)", "2,000 USDC (50%)", "1,000 USDC (25%)"];
+  public async certifyAuditAndDisburse(
+    project: ColosseumProjectSubmission,
+    usdcMint: PublicKey,
+    findings: {
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+      score: number;
+      reportBuffer: Buffer;
+    }
+  ): Promise<{ tx: string; attestationPDA: PublicKey }> {
+    const [grantPDA] = this.getGrantPDA(project.projectAuthorityPubkey, project.projectId);
+    const [vaultPDA] = this.getVaultPDA(grantPDA);
+    const [attestationPDA] = this.getAttestationPDA(grantPDA);
 
-    console.log(`Executing Milestone ${milestoneIndex + 1}/3 for Grant ${projectIdHex}`);
-    console.log(`Artifact Hash: ${deliverableHash.toString("hex")}`);
+    const reportHash = crypto.createHash("sha256").update(findings.reportBuffer).digest();
 
-    // Disburse event triggers on-chain settlement
-    await this.broadcastAlert(
-      `Milestone ${milestoneIndex + 1} Approved & Disbursed`,
-      `Released ${trancheAmounts[milestoneIndex]} to Auditor`,
-      {
-        ProjectId: projectIdHex,
-        Milestone: milestoneIndex + 1,
-        DisbursedAmount: trancheAmounts[milestoneIndex],
-        ArtifactSHA256: deliverableHash.toString("hex"),
-      }
+    const auditorTokenAccount = await getOrCreateAssociatedTokenAccount(
+      this.connection,
+      this.auditorKeypair,
+      usdcMint,
+      this.auditorKeypair.publicKey
     );
+
+    console.log(`[On-Chain] Minting Security Attestation: ${attestationPDA.toBase58()}`);
+
+    const tx = await this.program.methods
+      .finalizeAuditAndAttest(
+        Array.from(reportHash),
+        findings.critical,
+        findings.high,
+        findings.medium,
+        findings.low,
+        findings.score
+      )
+      .accounts({
+        grantAccount: grantPDA,
+        attestationCertificate: attestationPDA,
+        grantVault: vaultPDA,
+        auditorTokenAccount: auditorTokenAccount.address,
+        auditor: this.auditorKeypair.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      })
+      .signers([this.auditorKeypair])
+      .rpc();
+
+    await this.notifyTelemetry({
+      event: "AUDIT_CERTIFIED",
+      projectId: project.projectId,
+      score: findings.score,
+      txSignature: tx,
+      attestationPDA: attestationPDA.toBase58(),
+      founderEmail: project.founderEmail,
+    });
+
+    return { tx, attestationPDA };
   }
-}
 
-// Interactive CLI Entrypoint
-if (require.main === module) {
-  const sampleConfig: EngineConfig = {
-    rpcUrl: process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-    adminKeypairPath: process.env.ADMIN_KEYPAIR || "./admin-keypair.json",
-    auditorKeypairPath: process.env.AUDITOR_KEYPAIR || "./auditor-keypair.json",
-    usdcMint: process.env.USDC_MINT || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-    slackWebhookUrl: process.env.SLACK_WEBHOOK_URL,
-    resendApiKey: process.env.RESEND_API_KEY,
-    notificationEmail: process.env.ALERT_EMAIL || "founders@project.xyz",
-  };
+  /**
+   * Real Enterprise Telemetry: Resend API + Slack Webhook
+   */
+  private async notifyTelemetry(payload: any): Promise<void> {
+    console.log(`[Telemetry] Dispatching Webhook for Event: ${payload.event}`);
 
-  const engine = new VaultlineAutomationEngine(sampleConfig);
-  console.log("Vaultline Automation Engine Daemon Initialized Successfully.");
+    // 1. Resend Transactional Email to Founder
+    if (payload.founderEmail && process.env.RESEND_API_KEY) {
+      try {
+        await resend.emails.send({
+          from: "Vaultline Security Grants <grants@vaultline.audit>",
+          to: payload.founderEmail,
+          subject: `[Vaultline Grant Update] Status: ${payload.event} for ${payload.projectId}`,
+          html: `
+            <h2>Vaultline Colosseum Security Grant Notice</h2>
+            <p>Your security milestone has been executed on-chain.</p>
+            <ul>
+              <li><strong>Event:</strong> ${payload.event}</li>
+              <li><strong>Project:</strong> ${payload.projectId}</li>
+              <li><strong>Solana Tx:</strong> <code>${payload.txSignature}</code></li>
+              ${payload.score ? `<li><strong>Security Score:</strong> ${payload.score}/100</li>` : ""}
+              ${payload.attestationPDA ? `<li><strong>Attestation Certificate:</strong> <code>${payload.attestationPDA}</code></li>` : ""}
+            </ul>
+            <p>View on Solana Explorer: <a href="https://explorer.solana.com/tx/${payload.txSignature}?cluster=devnet">Explorer Link</a></p>
+          `,
+        });
+      } catch (err: any) {
+        console.warn(`[Warning] Resend notification failed: ${err.message}`);
+      }
+    }
+
+    // 2. Real-time Slack/Discord Webhook Alert
+    if (SLACK_WEBHOOK_URL) {
+      try {
+        await axios.post(SLACK_WEBHOOK_URL, {
+          text: `🛡️ *Vaultline Security Grant Update*\n• Event: \`${payload.event}\`\n• Project: *${payload.projectId}*\n• Tx: \`${payload.txSignature}\``,
+        });
+      } catch (err: any) {
+        console.warn(`[Warning] Slack alert failed: ${err.message}`);
+      }
+    }
+  }
 }

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  vaultline-telemetry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-grant-engine
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL}
+      - PROGRAM_ID=${PROGRAM_ID}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL}
+    volumes:
+      - ./keys:/app/keys:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

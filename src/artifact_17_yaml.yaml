@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  vaultline-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline_audit_grant_daemon
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=V1tLyNED3zFm9u2VawQk87E1cQ5yEa4b1o9L9zXwYkP
+      - USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuvwxyz
+      - ALERT_EMAIL_RECIPIENT=audits@vaultline.xyz
+      - ADMIN_KEYPAIR_PATH=/etc/vaultline/keys/admin.json
+    volumes:
+      - ./keypairs:/etc/vaultline/keys:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect(80, 'google.com').end()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

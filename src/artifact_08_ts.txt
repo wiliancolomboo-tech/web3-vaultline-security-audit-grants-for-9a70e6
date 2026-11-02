@@ -1,0 +1,69 @@
+import * as anchor from "@coral-xyz/anchor";
+import { assert } from "chai";
+
+describe("grant_guard", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+
+  it("initializes a grant", async () => {
+    // Assert PDA exists.
+    // Assert sponsor, project, auditor, arbiter.
+    // Assert amount and deadline.
+  });
+
+  it("rejects unauthorized funding", async () => {
+    // Attempt fund_grant using a non-sponsor signer.
+    // Assert AnchorError Unauthorized.
+  });
+
+  it("funds the grant exactly once", async () => {
+    // Fund grant.
+    // Assert status == Funded.
+    // Attempt second fund.
+    // Assert InvalidStatus.
+  });
+
+  it("submits a valid milestone", async () => {
+    // Submit index 0 with a SHA-256 artifact digest.
+    // Assert Submitted status and exact amount.
+  });
+
+  it("rejects duplicate milestone indexes", async () => {
+    // Submit index 0 twice.
+    // Assert MilestoneAlreadyExists.
+  });
+
+  it("rejects unauthorized approval", async () => {
+    // Attempt approval with project wallet.
+    // Assert Unauthorized.
+  });
+
+  it("approves and releases exactly once", async () => {
+    // Auditor approves.
+    // Auditor releases.
+    // Assert remaining balance decreased.
+    // Assert milestone == Paid.
+    // Attempt second release.
+    // Assert InvalidStatus.
+  });
+
+  it("rejects refund before deadline", async () => {
+    // Call refund_expired.
+    // Assert DeadlineNotReached.
+  });
+
+  it("refunds after deadline", async () => {
+    // Use a short local validator deadline or manipulate test clock.
+    // Assert sponsor receives remaining balance.
+    // Assert status == Refunded.
+  });
+
+  it("rejects oversized title and artifact hash", async () => {
+    // Assert InvalidTitle.
+    // Assert InvalidArtifactHash.
+  });
+
+  it("rejects a zero-value grant", async () => {
+    // Assert InvalidAmount.
+  });
+});

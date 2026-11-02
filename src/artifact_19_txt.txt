@@ -1,0 +1,8 @@
+Audit transparency shouldn't be optional—it should be cryptographic. 
+
+The complete codebase, smart contracts, CLI, and integration tests are live and 100% open-source!
+
+Apply for your 4,000 USDC audit grant or integrate your Colosseum project today: 
+👉 github.com/vaultline/colosseum-audit-grants
+
+cc @Colosseum @Solana #Solana #Security #Web3Security #Anchor

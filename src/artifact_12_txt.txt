@@ -1,0 +1,5 @@
+Building high-velocity primitives for @Colosseum? Security shouldn't be an afterthought or blocked by liquidity friction.
+
+Introducing Vaultline GrantMesh: an on-chain, milestone-governed audit grant protocol channeling up to 4,000 USDC per qualifying Colosseum team with zero counterparty risk. 🛡️⚡
+
+Here is how we verify and secure the next wave of Solana unicorns 👇

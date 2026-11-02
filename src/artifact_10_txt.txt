@@ -1,0 +1,5 @@
+Securing a hackathon win is hard. Launching on Solana mainnet without getting drained is harder.
+
+We're excited to submit the Vaultline Audit Guard for the @Colosseum & @Vaultline Security Audit Grant Program: an on-chain, milestone-driven escrow for $4,000 USDC security vouchers. 🛡️⚡
+
+Read the breakdown 👇

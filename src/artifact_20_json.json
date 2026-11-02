@@ -1,0 +1,9 @@
+{
+  "status": "healthy",
+  "service": "vaultline-audit-oracle",
+  "connected_cluster": "mainnet-beta",
+  "slot_lag": 0,
+  "tracked_grants": 12,
+  "active_auditors": 6,
+  "uptime_seconds": 84210
+}

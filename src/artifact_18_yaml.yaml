@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  vaultline-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-audit-agent
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - PROGRAM_ID=V1tLinEGpant1111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - VAULTLINE_NOTIFY_EMAIL=grants@vaultline.security
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

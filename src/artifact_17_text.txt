@@ -1,0 +1,7 @@
+3/4 🚀 Built with end-to-end telemetry: real-time Slack SecOps war rooms and automated @resend founder dispatchers.
+
+Ready for mainnet. Tested, dockerized, and open-source for all @Colosseum cohorts.
+
+GitHub Repo & Spec: https://github.com/vaultline/colosseum-security-gateway
+
+Tagging @VaultlineHQ @Solana @Colosseum #Solana #Security #Anchor

@@ -1,0 +1,15 @@
+[Uninitialized]
+       │
+       ▼ (initialize_grant)
+ [GrantInitialized: Funded with 4,000 USDC]
+       │
+       ▼ (approve_milestone_one)
+ [InReview: Tranche 1 Disbursed (30%)]
+       │
+       ▼ (approve_milestone_two)
+ [RemediationPending: Tranche 2 Disbursed (40%)]
+       │
+       ▼ (publish_attestation_and_settle)
+ [AttestedAndCompleted: Tranche 3 Disbursed (30%)]
+       │
+       └── (timeout_refund if deadline exceeded) ──► [RefundedToTreasury]

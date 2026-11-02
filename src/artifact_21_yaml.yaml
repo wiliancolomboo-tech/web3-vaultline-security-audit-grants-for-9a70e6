@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  vaultline-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaultline-security-daemon
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+      - SOLANA_WS_URL=wss://api.mainnet-beta.solana.com
+      - VAULTLINE_PROGRAM_ID=V1tLinEZ7sQYv5tV3u9Vv52qM7FjXW4R8B3KjLmN4op
+      - USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

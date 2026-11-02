@@ -1,0 +1,5 @@
+Security shouldn’t be a roadblock for high-velocity builders in the @Colosseum hackathon.
+
+Excited to reveal Vaultline Sentinel: an on-chain, milestone-driven audit grant escrow protocol for @VaultlineSecurity grants (up to $4,000 USDC each) on @solana 🛡️⚡
+
+Here's how we eliminate audit grant risk 🧵👇

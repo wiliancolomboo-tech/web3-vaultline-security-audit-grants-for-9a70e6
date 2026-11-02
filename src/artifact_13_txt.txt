@@ -1,0 +1,5 @@
+Hackathons move at the speed of light. Security audits don't. ⚡️
+
+Too many @Colosseum protocols hit mainnet without enterprise security due to budget barriers and scope drift.
+
+We’re introducing the Vaultline Milestone Escrow & Verification Protocol for Colosseum Audit Grants (up to 4,000 USDC each). 🧵👇

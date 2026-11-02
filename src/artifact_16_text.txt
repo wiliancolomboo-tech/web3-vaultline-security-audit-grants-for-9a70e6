@@ -1,0 +1,7 @@
+We’re democratizing tier-1 security for Solana's next breakout protocol.
+
+100% open-source Anchor engine, complete test coverage, and turnkey Docker agent ready for deployment.
+
+Let’s build the safest decentralized ecosystem together @Colosseum @Vaultline.
+
+Github: github.com/vaultline-audit/colosseum-security-grants 🚀

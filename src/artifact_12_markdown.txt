@@ -1,0 +1,17 @@
+1/3 🛡️ Securing the next wave of @Colosseum Solana champions:
+
+We are thrilled to launch the Vaultline Security Audit Grants Protocol! 
+
+Up to 4,000 USDC per project, non-custodial milestone disbursements, and continuous remediation verification natively on @solana. 🧵👇
+
+2/3 ⚡ No opaque spreadsheets. No manual wires. 
+The Vaultline Protocol programmatically locks audit grants into PDA vaults bound to GitHub commit SHA-256 hashes:
+✅ Milestone 1: Threat Model & Invariants ($1,000)
+✅ Milestone 2: Vuln Report Delivery ($2,000)
+✅ Milestone 3: Remediation Pass ($1,000)
+
+3/3 🚢 Featuring real-time webhook telemetry across Slack, Discord & Resend, Colosseum founders get world-class penetration testing with zero friction.
+
+Audit with certainty. Deploy with confidence. 
+
+Check out the open-source repo & apply for your 4,000 USDC grant today! 🌐🔒

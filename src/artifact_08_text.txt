@@ -1,0 +1,8 @@
+services/vaultline-daemon/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── index.ts
+│   ├── cli.ts
+│   ├── notifier.ts
+│   └── idl.json
