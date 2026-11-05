@@ -11,7 +11,7 @@ dotenv.config();
 
 // Configuration environment variables
 const RPC_URL = process.env.SOLANA_RPC_URL || clusterApiUrl("devnet");
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_dummy_key_vaultline";
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_test_000000000000000000000000";
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 const PROGRAM_ID = new PublicKey(process.env.PROGRAM_ID || "V1tLineAuditGrant1111111111111111111111111111");
 

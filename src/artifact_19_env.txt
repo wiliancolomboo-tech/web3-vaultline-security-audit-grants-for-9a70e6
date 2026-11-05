@@ -1,5 +1,5 @@
 SOLANA_RPC_URL=https://api.devnet.solana.com
 VAULTLINE_PROGRAM_ID=VLinE6gP9hF3vjQ7wK2rU8mX1yT5sZ4bC9dE3gH7jKL
 SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-RESEND_API_KEY=re_123456789abcdef012345678
+RESEND_API_KEY=re_test_000000000000000000000000
 PORT=8080

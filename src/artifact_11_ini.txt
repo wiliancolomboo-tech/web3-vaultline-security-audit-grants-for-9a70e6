@@ -3,6 +3,6 @@ VAULTLINE_PROGRAM_ID=V1tLineAuditEscrow11111111111111111111111111
 ADMIN_KEYPAIR_PATH=/app/keys/admin-keypair.json
 USDC_MINT_ADDRESS=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
 SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-RESEND_API_KEY=re_123456789abcdefghijklmnop
+RESEND_API_KEY=re_test_000000000000000000000000
 FOUNDER_ALERT_EMAIL=founders@colosseum-project.io
 PORT=8080

@@ -1340,7 +1340,7 @@ ADMIN_KEYPAIR_PATH=./keys/admin-keypair.json
 AUDITOR_KEYPAIR_PATH=./keys/auditor-keypair.json
 
 # Enterprise Notification Credentials
-RESEND_API_KEY=re_1234567890abcdef
+RESEND_API_KEY=re_test_000000000000000000000000
 SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 NOTIFICATION_EMAIL=audit-grants@vaultline.xyz

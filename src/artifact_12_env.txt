@@ -2,5 +2,5 @@ SOLANA_RPC_URL=https://api.devnet.solana.com
 PROGRAM_ID=VLinEUZ74Zp7J2dK8gB5gD1b3Kk6B8jMv8QY7V5mD7H
 SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-RESEND_API_KEY=re_123456789_abcdef
+RESEND_API_KEY=re_test_000000000000000000000000
 VAULTLINE_ADMIN_EMAIL=security-grants@vaultline.security

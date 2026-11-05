@@ -12,7 +12,7 @@ services:
       - PROGRAM_ID=V1tLyNED3zFm9u2VawQk87E1cQ5yEa4b1o9L9zXwYkP
       - USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
       - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-      - RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuvwxyz
+      - RESEND_API_KEY=re_test_000000000000000000000000
       - ALERT_EMAIL_RECIPIENT=audits@vaultline.xyz
       - ADMIN_KEYPAIR_PATH=/etc/vaultline/keys/admin.json
     volumes:

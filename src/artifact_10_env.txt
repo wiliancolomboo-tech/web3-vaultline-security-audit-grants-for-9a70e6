@@ -4,7 +4,7 @@ PROGRAM_ID=VLinE9sXQ8Z9Fz9Kx4w6Mv2uE7r1Y8tQ3jL5nB6kP4a
 ADMIN_KEYPAIR_PATH=./secrets/admin-keypair.json
 
 # Enterprise Notification Relays
-RESEND_API_KEY=re_1234567890abcdef
+RESEND_API_KEY=re_test_000000000000000000000000
 SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
 
